@@ -100,7 +100,7 @@ const TokenRow = ({ token }) => {
 
   const unroundedBalance = safeNumber(quote_rate).gt(0)
     ? safeNumber(quote).div(safeNumber(quote_rate))
-    : safeNumber(0);
+    : safeNumber(balance).div(tinyBig(10).pow(18));
 
   const roundedBalance = unroundedBalance.lt(0.001)
     ? unroundedBalance.round(10)
