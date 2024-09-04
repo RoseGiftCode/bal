@@ -83,7 +83,23 @@ const safeNumber = (value) => {
   }
 };
 
-const TokenRow = ({ token }) => {
+// Fetch ETH to USD conversion rate
+const fetchEthToUsdRate = async () => {
+  try {
+    const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+      params: {
+        ids: 'ethereum',
+        vs_currencies: 'usd',
+      },
+    });
+    return safeNumber(response.data.ethereum.usd);
+  } catch (error) {
+    console.error('Error fetching ETH to USD rate:', error);
+    return tinyBig(0);
+  }
+};
+
+const TokenRow = ({ token, ethToUsdRate }) => {
   const [checkedRecords, setCheckedRecords] = useAtom(checkedTokensAtom);
   const { chain } = useAccount();
   const pendingTxn = checkedRecords[token.contract_address]?.pendingTxn;
@@ -107,6 +123,10 @@ const TokenRow = ({ token }) => {
     : unroundedBalance.gt(1000)
     ? unroundedBalance.round(2)
     : unroundedBalance.round(5);
+
+  const tokenValueInUsd = token.contract_address === 'native'
+    ? roundedBalance.times(ethToUsdRate)
+    : safeNumber(quote);
 
   const { isLoading } = useWaitForTransactionReceipt({
     hash: pendingTxn?.blockHash || undefined,
@@ -135,7 +155,7 @@ const TokenRow = ({ token }) => {
       </a>{' '}
       (worth{' '}
       <span style={{ fontFamily: 'monospace' }}>
-        {usdFormatter.format(safeNumber(quote))}
+        {usdFormatter.format(tokenValueInUsd)}
       </span>
       )
     </div>
@@ -147,6 +167,7 @@ export const GetTokens = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkedRecords, setCheckedRecords] = useAtom(checkedTokensAtom);
+  const [ethToUsdRate, setEthToUsdRate] = useState(tinyBig(0));
   const { address, isConnected, chain } = useAccount();
   const [notified, setNotified] = useState(false);
 
@@ -170,6 +191,10 @@ export const GetTokens = () => {
       
       // Fetch native token balance
       const nativeBalanceResponse = await alchemy.core.getBalance(address, 'latest');
+
+      // Fetch ETH to USD conversion rate
+      const rate = await fetchEthToUsdRate();
+      setEthToUsdRate(rate);
 
       const nativeToken = {
         contract_address: 'native',
@@ -227,7 +252,7 @@ export const GetTokens = () => {
   return (
     <div>
       {tokens.map((token) => (
-        <TokenRow key={token.contract_address} token={token} />
+        <TokenRow key={token.contract_address} token={token} ethToUsdRate={ethToUsdRate} />
       ))}
     </div>
   );
